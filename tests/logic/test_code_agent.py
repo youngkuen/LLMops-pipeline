@@ -74,6 +74,18 @@ def test_markdown_fences_are_stripped():
     assert not code.source_code.endswith("```")
 
 
+def test_prose_before_fence_is_stripped():
+    """LLM이 코드 앞에 설명 문장을 붙이고 펜스로 감싸도 코드만 추출되어야 한다.
+    (회귀 테스트: 'invalid syntax (<unknown>, line 1)' 버그)"""
+    import ast
+    prose_wrapped = f"Here's the classification script:\n\n```python\n{GENERATED_CODE}\n```"
+    provider = MockLLMProvider(prose_wrapped)
+    agent = CodeAgent(llm_provider=provider)
+    code = agent.generate_code(SAMPLE_PLAN, SAMPLE_SCHEMA)
+    assert not code.source_code.lstrip().startswith("Here's")
+    ast.parse(code.source_code)  # 문법 오류 없이 파싱되어야 함
+
+
 def test_dependencies_are_detected():
     provider = MockLLMProvider(GENERATED_CODE)
     agent = CodeAgent(llm_provider=provider)

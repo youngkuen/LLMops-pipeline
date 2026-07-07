@@ -201,10 +201,20 @@ class CodeAgent:
 
 
 def _strip_fences(code: str) -> str:
+    """LLM 응답에서 실행 가능한 파이썬 코드만 추출한다.
+    코드 앞뒤에 설명 문장이 붙거나 ```python 펜스로 감싸여 있어도 안전하게 벗겨낸다.
+    """
     import re
-    code = re.sub(r"^```(?:python)?\s*\n?", "", code.strip())
-    code = re.sub(r"\n?```\s*$", "", code)
-    return code.strip()
+    text = code.strip()
+    # 닫힌 펜스 블록이 있으면 그 안의 내용만 취한다 (앞에 설명 문장이 있어도 안전).
+    # 블록이 여러 개면 가장 긴 것을 실제 스크립트로 본다.
+    fenced = re.findall(r"```(?:python)?\s*\n?(.*?)```", text, re.DOTALL)
+    if fenced:
+        return max(fenced, key=len).strip()
+    # 닫는 펜스가 없는 경우 등: 앞뒤에 붙은 펜스 라인만 제거한다.
+    text = re.sub(r"^```(?:python)?\s*\n?", "", text)
+    text = re.sub(r"\n?```\s*$", "", text)
+    return text.strip()
 
 
 def _detect_deps(code: str) -> list[str]:
