@@ -38,7 +38,9 @@ class AnthropicProvider(LLMProvider):
 
         kwargs: dict = {
             "model": self._model,
-            "max_tokens": 4096,
+            # 생성 ML 스크립트가 길어 4096이면 중간에 잘렸다(문법 오류 유발).
+            # 비스트리밍 요청의 안전 상한인 16000으로 상향.
+            "max_tokens": 16000,
             "messages": user_messages,
             "temperature": temperature,
         }
