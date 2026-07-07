@@ -86,6 +86,17 @@ def test_prose_before_fence_is_stripped():
     ast.parse(code.source_code)  # 문법 오류 없이 파싱되어야 함
 
 
+def test_prose_without_fence_is_stripped():
+    """펜스 없이 설명 문장만 앞에 붙은 경우에도 코드만 추출되어야 한다."""
+    import ast
+    prose_only = f"Here is the code:\n\n{GENERATED_CODE}"
+    provider = MockLLMProvider(prose_only)
+    agent = CodeAgent(llm_provider=provider)
+    code = agent.generate_code(SAMPLE_PLAN, SAMPLE_SCHEMA)
+    assert not code.source_code.lstrip().startswith("Here")
+    ast.parse(code.source_code)
+
+
 def test_dependencies_are_detected():
     provider = MockLLMProvider(GENERATED_CODE)
     agent = CodeAgent(llm_provider=provider)

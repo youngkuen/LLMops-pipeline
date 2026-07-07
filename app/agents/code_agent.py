@@ -202,19 +202,35 @@ class CodeAgent:
 
 def _strip_fences(code: str) -> str:
     """LLM 응답에서 실행 가능한 파이썬 코드만 추출한다.
-    코드 앞뒤에 설명 문장이 붙거나 ```python 펜스로 감싸여 있어도 안전하게 벗겨낸다.
+    언어 태그(```python·```py 등)가 붙은 펜스, 앞뒤 설명 문장, 펜스 없는 설명 문장까지 방어한다.
     """
     import re
     text = code.strip()
-    # 닫힌 펜스 블록이 있으면 그 안의 내용만 취한다 (앞에 설명 문장이 있어도 안전).
-    # 블록이 여러 개면 가장 긴 것을 실제 스크립트로 본다.
-    fenced = re.findall(r"```(?:python)?\s*\n?(.*?)```", text, re.DOTALL)
-    if fenced:
-        return max(fenced, key=len).strip()
-    # 닫는 펜스가 없는 경우 등: 앞뒤에 붙은 펜스 라인만 제거한다.
-    text = re.sub(r"^```(?:python)?\s*\n?", "", text)
-    text = re.sub(r"\n?```\s*$", "", text)
-    return text.strip()
+    # 1) 펜스 블록이 있으면 그 안의 내용만 취한다 (언어 태그 종류 무관, 여러 개면 가장 긴 것).
+    blocks = re.findall(r"```[^\n`]*\n(.*?)```", text, re.DOTALL)
+    if blocks:
+        text = max(blocks, key=len).strip()
+    else:
+        # 닫는 펜스가 없는 경우: 앞뒤에 붙은 펜스 라인만 제거한다.
+        text = re.sub(r"^```[^\n`]*\n?", "", text)
+        text = re.sub(r"\n?```\s*$", "", text).strip()
+    # 2) 그래도 첫 줄이 설명 문장이면(파싱 실패), 파싱되는 지점까지 앞 줄을 버린다.
+    if text and not _is_parseable(text):
+        lines = text.split("\n")
+        for i in range(1, len(lines)):
+            candidate = "\n".join(lines[i:]).strip()
+            if candidate and _is_parseable(candidate):
+                return candidate
+    return text
+
+
+def _is_parseable(src: str) -> bool:
+    import ast
+    try:
+        ast.parse(src)
+        return True
+    except SyntaxError:
+        return False
 
 
 def _detect_deps(code: str) -> list[str]:
