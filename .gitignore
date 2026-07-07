@@ -1,0 +1,22 @@
+# 환경 변수 / 시크릿
+.env
+.env.local
+.env.*.local
+.streamlit/secrets.toml
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# 로컬 데이터 (커밋 금지)
+test_data/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
