@@ -1,5 +1,7 @@
 # AutoML Pipeline — LLM 기반 ML 모델 자동 생성·검증 파이프라인
 
+[![tests](https://github.com/youngkuen/LLMops-pipeline/actions/workflows/tests.yml/badge.svg)](https://github.com/youngkuen/LLMops-pipeline/actions/workflows/tests.yml)
+
 > 정형 데이터를 업로드하면 LLM이 분석 계획을 세우고, ML 코드를 **생성 → 방법론 검증 → 실행 → 진단 → 자동 개선**까지 수행하는 End-to-End 파이프라인.
 
 ![데모 — 데이터 업로드부터 분석 결과까지](docs/assets/demo.gif)
