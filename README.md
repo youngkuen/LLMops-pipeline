@@ -109,6 +109,20 @@ streamlit run app/main.py
 
 `.env`는 `.gitignore`로 커밋되지 않습니다. API 키를 코드에 하드코딩하지 마세요.
 
+### Docker로 실행
+
+로컬에 Python을 설치하지 않고도, 어느 환경에서든 동일하게 실행할 수 있습니다.
+
+```bash
+# 1. 이미지 빌드
+docker build -t automl-pipeline .
+
+# 2. 실행 (API 키는 이미지에 넣지 않고 실행 시 주입)
+docker run -p 8501:8501 -e ANTHROPIC_API_KEY=your-key automl-pipeline
+```
+
+브라우저에서 `http://localhost:8501` 접속. API 키는 이미지에 포함되지 않고 실행 시 환경변수로만 전달됩니다.
+
 ---
 
 ## 사용 흐름

@@ -27,3 +27,12 @@ jobs:
 
       - name: 테스트 실행
         run: pytest
+
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 체크아웃
+        uses: actions/checkout@v7
+
+      - name: 도커 이미지 빌드 (Dockerfile이 실제로 빌드되는지 검증)
+        run: docker build -t automl-pipeline .
