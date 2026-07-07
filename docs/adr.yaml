@@ -1,0 +1,94 @@
+# Architecture Decision Records (ADR)
+#
+# 새 항목 추가 시 아래 스키마를 따릅니다:
+#
+# - id: ADR-XXX
+#   title: 결정 제목
+#   status: adopted | deprecated | superseded
+#   date: YYYY-MM-DD
+#   stacks: [적용 스택 목록]
+#   context: |
+#     (구체적인 상황 서술 — 이것만 읽고도 "왜 이 결정이 필요했는가"를 이해할 수 있어야 함)
+#     나쁜 예: "에러 처리가 비일관적이라 통일함"
+#     좋은 예: "각 서비스에서 에러를 자체적으로 catch하고 임의 형식으로 반환하고 있었다.
+#              엔드포인트 A는 { message: "..." }를, B는 { error: "...", code: 500 }을 반환했다.
+#              프론트엔드에서 공통 에러 핸들링이 불가능했고, 토스트 메시지 출력조차 불가능했다."
+#   decision: 채택한 결정
+#   consequence: 이 결정의 결과와 후속 영향
+
+# ─── Example ADR (프로젝트에 맞게 수정하세요) ──────────────────────────
+
+- id: ADR-001
+  title: "LLM 에이전트 방식 채택 (AutoML 미사용)"
+  status: adopted
+  date: 2026-06-24
+  stacks: [python, llm]
+  context: |
+    이사님(요청자)은 AutoML(PyCaret 등)을 사용해 모델 생성 파이프라인을 구성하자고 제안했다.
+    구현자는 AutoML의 블랙박스 특성(내부 알고리즘 선택 불투명), 커스터마이징 한계,
+    사용자 의도를 자연어로 받는 인터페이스와의 통합 어려움을 이유로 반대했다.
+    두 방향 모두 "데이터 → 모델"을 자동화하지만, 제어 가능성과 투명성에서 차이가 있다.
+  decision: |
+    LLM 멀티에이전트가 분석 계획을 수립하고 Python 코드(scikit-learn/XGBoost)를
+    직접 생성·실행하는 방식을 채택한다. AutoML 라이브러리는 모델 생성 핵심 경로에 사용하지 않는다.
+  consequence: |
+    - 사용자 의도를 자연어로 받아 분석 전략을 결정하는 흐름이 자연스럽게 연결됨
+    - 생성된 코드를 UI에 표시해 투명성 확보 가능
+    - LLM 호출 비용 발생 (AutoML 대비)
+    - 이사님 설득 필요 (구현자가 담당)
+
+- id: ADR-002
+  title: "LLMProvider 추상 인터페이스 설계"
+  status: adopted
+  date: 2026-06-24
+  stacks: [python]
+  context: |
+    LLM 공급자(OpenAI, Anthropic, 로컬 LLM 등)가 미결정인 상태에서 개발을 시작해야 했다.
+    특정 SDK에 직접 의존하면 공급자 전환 시 Logic 레이어 전체를 수정해야 한다.
+  decision: |
+    `LLMProvider` 추상 기반 클래스를 Data 레이어에 정의하고,
+    Logic 레이어(에이전트)는 인터페이스에만 의존한다.
+    구체 공급자(OpenAIProvider, AnthropicProvider)는 구현체로 분리하고,
+    main.py에서 생성자 주입으로 조립한다.
+  consequence: |
+    - 공급자 전환 시 구현체 파일 1개 교체로 대응 가능
+    - 단위 테스트에서 MockLLMProvider로 교체해 LLM 호출 없이 로직 검증 가능
+    - 추상 클래스 설계 비용 소량 발생
+
+- id: ADR-003
+  title: "Python 코드 실행: exec() + 공유 딕셔너리 (POC 한정)"
+  status: adopted
+  date: 2026-06-24
+  stacks: [python]
+  context: |
+    LLM이 생성한 Python 코드를 서버에서 실행해야 한다.
+    POC이므로 Docker sandbox 같은 보안 격리는 오버엔지니어링이다.
+    exec() 직접 사용 시 결과값 추출이 어렵다는 문제가 있었다.
+  decision: |
+    `exec(code, global_namespace)` 방식을 채택한다.
+    Code Agent가 생성하는 코드는 반드시 `result`(평가 지표 dict)와
+    `model`(학습된 모델 객체) 변수를 정의하는 것을 규칙으로 한다.
+    Executor는 실행 후 global_namespace에서 두 변수를 추출한다.
+  consequence: |
+    - 단순하고 빠른 구현 가능
+    - Code Agent 프롬프트에 변수명 규칙을 명시해야 함
+    - 보안 격리 없음 — 신뢰 환경에서만 실행 (POC 조건)
+    - 프로덕션 전환 시 Docker sandbox로 반드시 교체 필요
+
+- id: ADR-004
+  title: "SessionStore 추상화 (InMemory → DB 교체 가능)"
+  status: adopted
+  date: 2026-06-24
+  stacks: [python]
+  context: |
+    POC에서는 세션 이력 보존이 불필요하다. 그러나 프로덕션 전환 시
+    세션 이력 저장이 필요하므로 저장소 교체 가능성을 열어두어야 한다.
+    Streamlit의 st.session_state를 직접 사용하면 나중에 교체가 어렵다.
+  decision: |
+    `SessionStore` 추상 클래스를 정의하고 `InMemorySessionStore` 구현체에서
+    st.session_state를 백엔드로 사용한다.
+    프로덕션 전환 시 PostgreSQL 기반 구현체를 추가하고 주입만 교체한다.
+  consequence: |
+    - POC에서 DB 없이 동작 가능
+    - 프로덕션 전환 시 구현체 교체만으로 이력 보존 가능
+    - 인터페이스 설계 비용 소량 발생

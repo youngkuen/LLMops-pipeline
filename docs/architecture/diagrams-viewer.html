@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>아키텍처 다이어그램 — AI 모델 생성 파이프라인</title>
+<style>
+  :root { --bg:#0b1120; --card:rgba(30,41,59,.55); --border:rgba(99,102,241,.25); --text:#e2e8f0; --muted:#94a3b8; }
+  * { box-sizing:border-box; }
+  body {
+    margin:0; padding:40px 20px; background:
+      radial-gradient(1200px 600px at 12% -8%, rgba(99,102,241,.16), transparent 60%),
+      radial-gradient(1000px 520px at 92% 4%, rgba(34,211,238,.10), transparent 55%), var(--bg);
+    color:var(--text); font-family:'Segoe UI',-apple-system,sans-serif;
+  }
+  .wrap { max-width:1100px; margin:0 auto; }
+  header.hero {
+    padding:26px 30px; margin-bottom:30px; border-radius:20px;
+    background:linear-gradient(135deg, rgba(30,41,59,.75), rgba(15,23,42,.55));
+    border:1px solid var(--border); box-shadow:0 16px 48px rgba(2,6,23,.5);
+  }
+  .badge { font-size:11px; font-weight:800; letter-spacing:.18em; color:#818cf8; }
+  h1 { margin:10px 0 6px; font-size:1.9rem; letter-spacing:-.03em;
+    background:linear-gradient(90deg,#f1f5f9,#a5b4fc 55%,#67e8f9);
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+  nav { display:flex; flex-wrap:wrap; gap:8px; margin:22px 0 10px; }
+  nav a { font-size:.82rem; color:#c7d2fe; text-decoration:none; padding:6px 12px;
+    background:rgba(99,102,241,.12); border:1px solid var(--border); border-radius:999px; }
+  nav a:hover { background:rgba(99,102,241,.28); }
+  .new-tag { display:inline-block; font-size:.68rem; font-weight:800; color:#6ee7b7;
+    background:rgba(16,185,129,.14); border:1px solid rgba(16,185,129,.4);
+    border-radius:999px; padding:1px 7px; margin-left:6px; vertical-align:middle; }
+  section.diagram {
+    background:var(--card); border:1px solid var(--border); border-radius:16px;
+    padding:22px 24px; margin:18px 0; box-shadow:0 8px 28px rgba(2,6,23,.4);
+  }
+  section.diagram h2 { margin:0 0 4px; font-size:1.2rem; color:#f1f5f9; }
+  section.diagram p.desc { margin:0 0 16px; color:var(--muted); font-size:.88rem; }
+  .imgbox { background:#ffffff; border-radius:12px; padding:18px; overflow-x:auto; text-align:center; }
+  .imgbox img { max-width:100%; height:auto; }
+
+  /* 접이식 설명 */
+  details.explain {
+    margin-top:16px; border:1px solid var(--border); border-radius:12px;
+    background:rgba(15,23,42,.55); overflow:hidden;
+  }
+  details.explain > summary {
+    cursor:pointer; list-style:none; padding:12px 18px;
+    font-size:.92rem; font-weight:700; color:#c7d2fe;
+    background:rgba(99,102,241,.14); display:flex; align-items:center; gap:8px;
+    user-select:none;
+  }
+  details.explain > summary::-webkit-details-marker { display:none; }
+  details.explain > summary::before { content:"▸"; font-size:.9rem; transition:transform .15s ease; }
+  details.explain[open] > summary::before { transform:rotate(90deg); }
+  details.explain > summary:hover { background:rgba(99,102,241,.24); }
+  .explain-body { padding:18px 22px; font-size:.92rem; line-height:1.7; }
+  .explain-body .row { margin:0 0 14px; }
+  .explain-body .row:last-child { margin-bottom:0; }
+  .explain-body .label {
+    display:inline-block; font-size:.72rem; font-weight:800; letter-spacing:.06em;
+    text-transform:uppercase; color:#818cf8; margin-bottom:4px;
+  }
+  .explain-body p { margin:2px 0; color:var(--text); }
+  .explain-body ul { margin:4px 0 0; padding-left:20px; color:var(--text); }
+  .explain-body li { margin:3px 0; }
+  .explain-body .easy {
+    margin-top:4px; padding:10px 14px; border-radius:10px;
+    background:rgba(34,211,238,.10); border-left:3px solid #22d3ee; color:#e2e8f0;
+  }
+  .explain-body b { color:#f1f5f9; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <div class="badge">AI MODEL PIPELINE · ARCHITECTURE</div>
+    <h1>아키텍처 다이어그램</h1>
+    <nav>
+      <a href="#d1">1. 시스템 컨텍스트</a>
+      <a href="#d2">2. 컴포넌트 구조</a>
+      <a href="#d3">3. Mode B 전체 흐름</a>
+      <a href="#d4">4. 세션 상태</a>
+      <a href="#d5">5. 통합 개선 루프</a>
+      <a href="#d6">6. ML 방법론 게이트</a>
+      <a href="#d7">7. 결과 진단</a>
+      <a href="#d8">8. PII 마스킹</a>
+      <a href="#d9">9. 도메인 모델</a>
+      <a href="#d10">10. LLM 교체·캐싱</a>
+    </nav>
+  </header>
+
+  <section class="diagram" id="d1">
+    <h2>1. 시스템 컨텍스트</h2>
+    <p class="desc">사용자 · 앱(3-Tier) · 외부 시스템(Claude API, 데이터 파일)의 관계 조감도.</p>
+    <div class="imgbox"><img src="diagrams/01-system-context.svg" alt="시스템 컨텍스트"></div>
+    <details class="explain">
+      <summary>📖 설명</summary>
+      <div class="explain-body">
+        <div class="row"><span class="label">무엇을 보여주나</span>
+          <p>시스템을 가장 멀리서 본 조감도입니다. 우리 앱이 <b>누구와(사용자), 무엇과(Claude AI, 데이터 파일)</b> 연결되는지만 보여줍니다.</p></div>
+        <div class="row"><span class="label">어떻게 읽나</span>
+          <ul>
+            <li>가운데 큰 박스가 <b>우리 앱</b>이고, 그 안은 3개 층으로 나뉘어 있습니다.</li>
+            <li>왼쪽 사람이 <b>사용자</b>, 오른쪽 구름이 <b>Claude AI(외부 서비스)</b>, 아래가 <b>데이터 파일</b>(CSV·Excel·JSON 등)입니다.</li>
+            <li>화살표는 "누가 누구에게 무엇을 주고받는지"를 뜻합니다.</li>
+          </ul></div>
+        <div class="row"><span class="label">쉽게 말하면</span>
+          <div class="easy">사용자는 앱에 데이터와 목표만 줍니다. 앱은 머리를 써야 할 때 외부의 Claude AI에게 물어보고, 데이터는 파일에서 읽어옵니다. Claude에 보내는 텍스트는 개인정보가 미리 가려진 뒤 나갑니다. 우리 앱이 가운데서 이 모든 걸 중개하는 구조입니다.</div></div>
+      </div>
+    </details>
+  </section>
+
+  <section class="diagram" id="d2">
+    <h2>2. 3-Tier 컴포넌트 구조</h2>
+    <p class="desc">Presentation / Logic / Data / Domain 레이어별 모듈과 의존 방향.</p>
+    <div class="imgbox"><img src="diagrams/02-component.svg" alt="컴포넌트 구조"></div>
+    <details class="explain">
+      <summary>📖 설명</summary>
+      <div class="explain-body">
+        <div class="row"><span class="label">무엇을 보여주나</span>
+          <p>앱 내부를 역할별로 <b>3개 층</b>으로 나누고, 각 층에 어떤 부품(파일)이 들어 있는지 보여줍니다. 회색 점선으로 표시된 <b>mode_a.py</b>는 현재 화면에는 안 보이지만 코드는 남아있는 부분입니다.</p></div>
+        <div class="row"><span class="label">어떻게 읽나</span>
+          <ul>
+            <li><b>위층 — 화면(Presentation)</b>: 사용자가 보는 화면. 지금은 mode_b.py 하나만 활성화되어 있습니다.</li>
+            <li><b>가운데 — 두뇌(Logic)</b>: AI 일꾼들. <b>spec_agent</b>(명세서 자동 분석)가 새로 추가됐습니다.</li>
+            <li><b>아래층 — 창고·통로(Data)</b>: 파일 읽기, 코드 실행, AI 호출. <b>anonymizer</b>(개인정보 마스킹), <b>caching_provider</b>(응답 재사용)가 새로 추가됐습니다.</li>
+            <li>화살표는 <b>위에서 아래로만</b> 흐릅니다.</li>
+          </ul></div>
+        <div class="row"><span class="label">쉽게 말하면</span>
+          <div class="easy">식당으로 비유하면 화면은 <b>홀 직원</b>, 두뇌는 <b>주방</b>, 데이터는 <b>창고</b>입니다. 이번에 주방에 "명세서 읽어주는 직원"(spec_agent)이, 창고에는 "개인정보 가리개"(anonymizer)와 "같은 주문 기억하기"(caching_provider)가 새로 생긴 셈입니다. 구조 자체는 그대로라 추가해도 다른 부분이 안 망가집니다.</div></div>
+      </div>
+    </details>
+  </section>
+
+  <section class="diagram" id="d3">
+    <h2>3. Mode B 전체 파이프라인 시퀀스 <span class="new-tag">개편</span></h2>
+    <p class="desc">데이터 로드 → 명세서 자동 분석 → 계획 3개 제안 → 선택 → 통합 개선 루프까지, 현재 유일하게 활성화된 흐름.</p>
+    <div class="imgbox"><img src="diagrams/03-mode-b-full-sequence.svg" alt="Mode B 전체 파이프라인 시퀀스"></div>
+    <details class="explain">
+      <summary>📖 설명</summary>
+      <div class="explain-body">
+        <div class="row"><span class="label">무엇을 보여주나</span>
+          <p>이제 사용자가 실제로 쓰는 <b>유일한 경로</b>를 처음부터 끝까지 보여줍니다. 예전엔 "완전 자동(Mode A)"과 "반자동(Mode B)" 두 갈래가 있었는데, 지금은 Mode B 하나로 통일됐고 그 안에 기능이 더 늘었습니다.</p></div>
+        <div class="row"><span class="label">어떻게 읽나 — 3단계</span>
+          <ul>
+            <li><b>0단계(짙은 배경)</b>: 데이터를 올리면 컬럼을 자동으로 찾아내고, 동시에 개인정보로 보이는 컬럼이 있는지 훑습니다. 설명 문서를 같이 올리면 AI가 컬럼 설명·목표·타겟을 알아서 채워줍니다.</li>
+            <li><b>1단계(연보라)</b>: AI가 서로 다른 성격의 분석 방향 3개를 제안합니다.</li>
+            <li><b>2단계(연하늘)</b>: 방향을 고르면, "코드 만들기 → 검증 → 실행 → 진단"을 <b>최대 3번까지 반복</b>하며 점점 나은 결과를 찾습니다. 각 단계마다 실제 비용(달러)도 함께 보여줍니다.</li>
+          </ul></div>
+        <div class="row"><span class="label">쉽게 말하면</span>
+          <div class="easy">예전엔 "한 번 만에 뚝딱" 방식이었다면, 지금은 <b>여러 번 다시 시도해서 더 좋은 결과를 고르는</b> 방식으로 바뀌었습니다. 그리고 그 전 과정에서 개인정보가 새어나가지 않게, 또 얼마가 들었는지 투명하게 보여주는 장치가 곳곳에 들어갔습니다.</div></div>
+      </div>
+    </details>
+  </section>
+
+  <section class="diagram" id="d4">
+    <h2>4. 세션 상태 머신</h2>
+    <p class="desc">PENDING → … → COMPLETED / FAILED 상태 전이와 Mode B 분기.</p>
+    <div class="imgbox"><img src="diagrams/04-session-state.svg" alt="세션 상태 머신"></div>
+    <details class="explain">
+      <summary>📖 설명</summary>
+      <div class="explain-body">
+        <div class="row"><span class="label">무엇을 보여주나</span>
+          <p>하나의 분석 작업이 시작부터 끝까지 거치는 <b>상태들</b>과, 어떤 조건에서 다음 상태로 넘어가는지를 보여줍니다. 이 흐름 자체는 이전과 동일합니다.</p></div>
+        <div class="row"><span class="label">어떻게 읽나</span>
+          <ul>
+            <li>각 박스가 <b>상태</b>입니다 (대기 → 계획중 → 코드생성중 → 실행중 → 완료).</li>
+            <li>화살표 위의 글씨가 <b>다음으로 넘어가는 조건</b>입니다.</li>
+            <li>어느 단계든 문제가 생기면 <b>실패(FAILED)</b>로 빠집니다.</li>
+            <li>"코드생성중 ↔ 실행중" 구간은 내부적으로 최대 3라운드 반복되지만(다음 다이어그램 참고), 겉에서 보이는 상태 이름은 그대로입니다.</li>
+          </ul></div>
+        <div class="row"><span class="label">쉽게 말하면</span>
+          <div class="easy">택배 배송 조회와 같습니다. 지금은 항상 "선택 대기" 단계를 거치는 경로(Mode B)만 실제로 쓰입니다.</div></div>
+      </div>
+    </details>
+  </section>
+
+  <section class="diagram" id="d5">
+    <h2>5. 통합 개선 루프 <span class="new-tag">신규 구조</span></h2>
+    <p class="desc">코드 생성 → 검증 → 실행 → 진단을 최대 3라운드 반복하며 가장 나은 결과를 채택하는 이중 루프.</p>
+    <div class="imgbox"><img src="diagrams/05-improvement-loop.svg" alt="통합 개선 루프"></div>
+    <details class="explain">
+      <summary>📖 설명</summary>
+      <div class="explain-body">
+        <div class="row"><span class="label">무엇을 보여주나</span>
+          <p>예전엔 "코드에 규칙 위반이 있으면 다시 짜기"만 있었는데, 이제는 그 바깥에 <b>"결과 자체가 별로면 통째로 다시 시도"</b>하는 루프가 하나 더 생겼습니다. 이중 반복 구조입니다.</p></div>
+        <div class="row"><span class="label">어떻게 읽나 — 안쪽 vs 바깥쪽</span>
+          <ul>
+            <li><b>안쪽 회색 상자(GATE)</b>: AI가 코드를 짜면 자동 검사관이 규칙 위반을 확인하고, 걸리면 최대 3번까지 고쳐 씁니다. (기존과 동일)</li>
+            <li><b>바깥쪽 전체 흐름</b>: 검증된 코드를 실제로 돌려보고 결과를 진단합니다. "신뢰 가능"이 나오면 바로 끝내고, 아니면 <b>진단 내용을 AI에게 알려주고 처음부터 다시</b> 시도합니다 — 최대 3라운드.</li>
+            <li>중간에 더 나빠지면 이전의 더 좋았던 결과를 그대로 채택합니다 (손해 보지 않음).</li>
+          </ul></div>
+        <div class="row"><span class="label">쉽게 말하면</span>
+          <div class="easy">이전엔 "규칙만 지키면 통과"였다면, 이제는 "규칙도 지키고 성능도 괜찮아야 통과"입니다. 첫 시도가 별로면 AI에게 "여기가 문제였다"고 알려주고 다시 시켜보는, 사람이 피드백을 주며 재작업을 요청하는 것과 비슷한 과정입니다.</div></div>
+      </div>
+    </details>
+  </section>
+
+  <section class="diagram" id="d6">
+    <h2>6. ML 방법론 게이트 6종 <span class="new-tag">신규</span></h2>
+    <p class="desc">정규식이 아닌 AST(코드 구조 분석) 기반으로 전환된 6가지 코드 검증 규칙.</p>
+    <div class="imgbox"><img src="diagrams/06-ml-gates.svg" alt="ML 방법론 게이트 6종"></div>
+    <details class="explain">
+      <summary>📖 설명</summary>
+      <div class="explain-body">
+        <div class="row"><span class="label">무엇을 보여주나</span>
+          <p>AI가 짠 코드가 통계적으로 반칙을 저지르지 않았는지 검사하는 <b>6가지 자동 검사관</b>입니다. 예전엔 3가지였고 문자열 검색 방식이었는데, 이제는 <b>코드의 실제 구조를 분석</b>하는 더 똑똑한 방식으로 바뀌었고 항목도 늘었습니다.</p></div>
+        <div class="row"><span class="label">6가지 검사 항목</span>
+          <ul>
+            <li>① <b>데이터 누수</b> — 시험 문제(테스트 데이터)를 미리 보고 공부하지 않았는지. 변수 이름을 바꿔치기 해도 잡아냅니다.</li>
+            <li>② <b>교차검증 무결성</b> 🆕 — 여러 설정을 비교해보는 과정 자체가 전체 데이터로 이뤄지지 않았는지</li>
+            <li>③ <b>SMOTE 순서</b> — 데이터를 부풀리는 처리를 시험 전에 미리 하지 않았는지</li>
+            <li>④ <b>평가 무결성</b> — 최종 채점을 연습 문제로만 하지 않았는지</li>
+            <li>⑤ <b>시계열 분할</b> — 미래 정보로 과거를 맞히지 않았는지 (시계열 전용)</li>
+            <li>⑥ <b>재현성</b> 🆕 — 다시 실행해도 같은 결과가 나오도록 난수 값이 고정됐는지</li>
+          </ul></div>
+        <div class="row"><span class="label">쉽게 말하면</span>
+          <div class="easy">예전 검사관은 "정답지"라는 글자가 그대로 있는지만 봤다면, 지금 검사관은 "이게 진짜 정답지 맞는지" 내용을 직접 확인합니다. 그래서 이름을 바꿔서 숨겨도 들킵니다. 검사 항목도 2개 더 늘어서 더 꼼꼼해졌습니다.</div></div>
+      </div>
+    </details>
+  </section>
+
+  <section class="diagram" id="d7">
+    <h2>7. 결과 진단 로직</h2>
+    <p class="desc">룰 기반 체크 → 종합 판정 → 개인정보 마스킹 → LLM 해석으로 이어지는 EvalAgent 흐름.</p>
+    <div class="imgbox"><img src="diagrams/07-eval-logic.svg" alt="결과 진단 로직"></div>
+    <details class="explain">
+      <summary>📖 설명</summary>
+      <div class="explain-body">
+        <div class="row"><span class="label">무엇을 보여주나</span>
+          <p>모델이 나온 뒤, 그 결과가 신뢰할 만한지 판정하는 과정입니다. 이번에 <b>다중공선성 체크</b>와 <b>개인정보 마스킹</b> 단계가 추가됐습니다.</p></div>
+        <div class="row"><span class="label">어떻게 읽나</span>
+          <ul>
+            <li><b>왼쪽</b>: 정해진 규칙으로 체크합니다. 새로 추가된 <b>다중공선성</b>은 "서로 너무 비슷하게 움직이는 변수가 있는지"를 봅니다.</li>
+            <li><b>가운데</b>: 체크 결과를 종합해 <b>신호등 판정</b>을 내립니다. ✅ 신뢰 가능 / ⚠️ 주의 필요 / ❌ 신뢰 어려움</li>
+            <li><b>오른쪽</b>: AI에게 해석을 부탁하기 <b>직전에</b>, 혹시 타겟 값 자체가 이메일·전화번호 같은 개인정보이면 가려서 보냅니다.</li>
+          </ul></div>
+        <div class="row"><span class="label">쉽게 말하면</span>
+          <div class="easy">"서로 똑같은 말을 하는 변수 두 개를 같이 넣으면 결과 해석이 헷갈릴 수 있다"는 걸 자동으로 잡아주는 게 다중공선성 체크입니다. 그리고 AI에게 물어보기 전에 혹시 모를 개인정보를 한 번 더 가리는 안전장치가 새로 생겼습니다.</div></div>
+      </div>
+    </details>
+  </section>
+
+  <section class="diagram" id="d8">
+    <h2>8. 개인정보(PII) 탐지·마스킹 흐름 <span class="new-tag">신규</span></h2>
+    <p class="desc">컬럼명 + 실제 값 패턴으로 민감정보를 찾아내고, AI에게 보내기 전 가리는 전체 흐름.</p>
+    <div class="imgbox"><img src="diagrams/08-pii-masking.svg" alt="PII 탐지·마스킹 흐름"></div>
+    <details class="explain">
+      <summary>📖 설명</summary>
+      <div class="explain-body">
+        <div class="row"><span class="label">무엇을 보여주나</span>
+          <p>데이터에 이름·전화번호·이메일 같은 개인정보가 섞여 있으면 자동으로 찾아내고, AI에게 보내는 텍스트에서 가려주는 전체 과정입니다.</p></div>
+        <div class="row"><span class="label">어떻게 읽나</span>
+          <ul>
+            <li><b>탐지</b>: 먼저 컬럼 이름을 보고("email", "전화" 등), 애매하면 실제 값 샘플을 최대 50개 뽑아 이메일·전화번호 패턴에 맞는지 확인합니다.</li>
+            <li><b>화면 표시</b>: 찾아낸 컬럼은 화면에 🔒 배지로 사용자에게 알려줍니다.</li>
+            <li><b>가리기 — 두 지점</b>: ① 업로드한 설명 문서를 AI가 읽기 전에, ② 결과를 진단할 때 타겟 값이 AI에게 전달되기 전에, 각각 실제 값을 <code>홍**</code>, <code>010-****-5678</code>처럼 일부만 보이게 바꿉니다.</li>
+          </ul></div>
+        <div class="row"><span class="label">쉽게 말하면</span>
+          <div class="easy">이 프로그램에서 실제 코드 실행은 사용자 컴퓨터 안에서만 이루어져서 데이터가 밖으로 안 나갑니다. 다만 AI에게 "이 컬럼이 뭐냐"고 물어보거나 "이 결과가 믿을 만하냐"고 물어볼 때 텍스트 일부가 나가는데, 이 두 지점에서 개인정보만 콕 집어 가려주는 안전장치입니다.</div></div>
+      </div>
+    </details>
+  </section>
+
+  <section class="diagram" id="d9">
+    <h2>9. 도메인 모델 관계</h2>
+    <p class="desc">Session · Schema · Plan · Result 등 데이터 구조의 관계.</p>
+    <div class="imgbox"><img src="diagrams/09-domain-model.svg" alt="도메인 모델"></div>
+    <details class="explain">
+      <summary>📖 설명</summary>
+      <div class="explain-body">
+        <div class="row"><span class="label">무엇을 보여주나</span>
+          <p>시스템 안에서 정보가 어떤 <b>상자(데이터 구조)</b>에 담겨 오가는지 보여줍니다. 컬럼 상자에 <b>개인정보 종류</b>가, 계획 상자에 <b>시간 컬럼</b>(시계열용) 필드가 새로 추가됐습니다.</p></div>
+        <div class="row"><span class="label">어떻게 읽나</span>
+          <ul>
+            <li>각 박스가 하나의 <b>데이터 묶음</b>입니다 (세션, 데이터 구조, 계획, 결과 등).</li>
+            <li>가장 큰 <b>세션(Session)</b> 상자 안에 데이터 구조·계획·결과가 들어 있습니다.</li>
+            <li>선은 "A가 B를 가지고 있다"는 <b>포함·연결 관계</b>를 뜻합니다.</li>
+          </ul></div>
+        <div class="row"><span class="label">쉽게 말하면</span>
+          <div class="easy">정보를 어떤 <b>서류 봉투</b>에 담아 주고받느냐에 대한 그림입니다. 봉투 양식에 "이 항목은 개인정보인가요?", "시계열이면 어떤 컬럼이 시간축인가요?" 같은 새 칸이 추가된 정도로 이해하면 됩니다. (가장 기술적인 그림이라, 깊이 들어가지 않아도 됩니다.)</div></div>
+      </div>
+    </details>
+  </section>
+
+  <section class="diagram" id="d10">
+    <h2>10. LLM 교체 및 캐싱 지점 <span class="new-tag">업데이트</span></h2>
+    <p class="desc">LLMProvider 인터페이스로 Claude ↔ 로컬 모델을 갈아끼우는 구조 + 응답 캐싱 계층.</p>
+    <div class="imgbox"><img src="diagrams/10-llm-swap-caching.svg" alt="LLM 교체 및 캐싱 지점"></div>
+    <details class="explain">
+      <summary>📖 설명</summary>
+      <div class="explain-body">
+        <div class="row"><span class="label">무엇을 보여주나</span>
+          <p>AI 일꾼들이 Claude에 직접 묶여 있지 않고 <b>표준 규격(콘센트)</b>을 통해 연결돼 있다는 구조는 그대로입니다. 이번에 콘센트와 Claude 사이에 <b>"같은 질문 기억하기" 장치(캐싱)</b>가 새로 끼워졌습니다.</p></div>
+        <div class="row"><span class="label">어떻게 읽나</span>
+          <ul>
+            <li><b>위</b>: AI 일꾼 5명(명세서 분석 담당이 새로 추가됨). 이들은 <b>표준 콘센트(LLMProvider)</b>에만 연결됩니다.</li>
+            <li><b>가운데</b>: 콘센트에 <b>캐싱 장치</b>가 먼저 꽂히고, 그 뒤에 실제 Claude가 연결됩니다. 완전히 똑같은 질문이 다시 오면 Claude에 묻지 않고 저장해둔 답을 바로 돌려줍니다.</li>
+            <li><b>아래</b>: 점선으로 표시된 <b>로컬 AI</b>는 아직 만들지 않았지만, 나중에 이 콘센트에 꽂기만 하면 되는 자리입니다.</li>
+          </ul></div>
+        <div class="row"><span class="label">쉽게 말하면</span>
+          <div class="easy">같은 데이터로 같은 분석을 두 번 돌리면, 두 번째부터는 AI에게 다시 묻지 않고 <b>이전 답을 그대로 재사용</b>합니다. 이러면 "똑같이 돌렸는데 결과가 매번 다르다"는 문제가 줄고, API 비용도 아낄 수 있습니다. 콘센트 구조는 그대로라 로컬 AI 추가는 여전히 쉽습니다.</div></div>
+      </div>
+    </details>
+  </section>
+
+</div>
+</body>
+</html>
