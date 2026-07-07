@@ -21,7 +21,12 @@ def validate_code(source_code: str) -> ValidationResult:
     try:
         tree = ast.parse(source_code)
     except SyntaxError as e:
-        return ValidationResult(is_valid=False, error_message=f"문법 오류: {e}")
+        first_line = next((ln for ln in source_code.splitlines() if ln.strip()), "")
+        preview = first_line[:120]
+        return ValidationResult(
+            is_valid=False,
+            error_message=f"문법 오류: {e} | 코드 첫 줄: {preview!r}",
+        )
 
     blocked = []
     for node in ast.walk(tree):
